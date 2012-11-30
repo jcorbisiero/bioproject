@@ -72,7 +72,7 @@ public class FeatureExtractor {
 		 * 	public foo()
 		 * 	{
 		 */
-		String header = "Class\tComments\tNumOfLines\tWhileCount\tForCount\tIfCondCount\tClassCount\tBracketCount\tAllSpaces\tCSS";
+		String header = "Class\tComments\tBComments\tNumOfLines\tWhileCount\tForCount\tIfCondCount\tClassCount\tBracketCount\tAllSpaces\tCSS";
 		writeHeader(header);
 		String pseudonym = args[0];
 		for(int i = 1; i<args.length; i++){
@@ -167,7 +167,7 @@ public class FeatureExtractor {
 					+ whileLoopCount + "\nforLoop: " + forLoopCount + "\nifCount: " + ifCount + "\nclasses: "
 					+ classes + "\nbracketCount:" + bracketCount + "\nall spaces: " + allSpaces + "\ncoding style spaces: " + codingStyle; 		
 			System.out.println(s);		
-			String fileStr = pseudonym + "\t" + comments + "\t\t" + numOfLines + "\t\t" + whileLoopCount + "\t\t" + forLoopCount + "\t\t" + ifCount + "\t\t" 
+			String fileStr = pseudonym + "\t" + comments + "\t\t" + blockComments + "\t\t" + numOfLines + "\t\t" + whileLoopCount + "\t\t" + forLoopCount + "\t\t" + ifCount + "\t\t" 
 							+ classes + "\t\t" + bracketCount + "\t\t" + allSpaces + "\t\t" + codingStyle;
 			writeData(fileStr);
 		}
@@ -244,7 +244,7 @@ public class FeatureExtractor {
 	 */ 
 	public static int test(String s){
 		//System.out.println("In Test");
-		//System.out.println("String: " + s);
+		System.out.println("String: " + s);
 		String temp = null;
 		if(s.length() > 2 && s.contains("//")){
 			//System.out.println("Comment after code, same line");
@@ -271,7 +271,7 @@ public class FeatureExtractor {
 			return codingStyle(temp);
 		}else if(s.length() > 2 && s.contains("/*")){ // same above but now with /* condition
 			//System.out.println("Comment after code, same line");
-			if(!s.startsWith("/*")){
+			if(!s.trim().startsWith("/*")){
 				int n = s.indexOf("/*");
 				//System.out.println("n: " + n);
 				temp = s.substring(0, n-1);
@@ -283,7 +283,7 @@ public class FeatureExtractor {
 			 */
 			if(temp == null)
 				return 0;
-			
+			System.out.println("temp" + temp.length());
 			StringTokenizer st = new StringTokenizer(temp, "\t\n");
 			temp = st.nextToken().trim();
 			
@@ -370,10 +370,10 @@ public class FeatureExtractor {
 		//System.out.println("After concat: " + fullPath);
 
 		
-		Class<?> cls = Class.forName(fullPath); 
-		functions += cls.getDeclaredMethods().length;
-		classes += cls.getClasses().length;
-		fields += cls.getDeclaredFields().length;
+		//Class<?> cls = Class.forName(fullPath); 
+		//functions += cls.getDeclaredMethods().length;
+		//classes += cls.getClasses().length;
+		//fields += cls.getDeclaredFields().length;
 		//System.out.println("functions: " + functions + "\nclasses: " + classes + "\nfields: " + fields);
 	}
 	
