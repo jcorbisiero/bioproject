@@ -315,6 +315,7 @@ public class FeatureExtractor {
 		//System.out.println("check coding style");
 		if(s.trim().startsWith("if ") || s.trim().startsWith("if(")){
 			//System.out.println("IF: String: " + s);
+
 			ifCount++;
 			return c.check_if(s);
 		}else if(s.trim().startsWith("for ") || s.trim().startsWith("for(")){
@@ -322,7 +323,7 @@ public class FeatureExtractor {
 			forLoopCount++;
 			return c.check_for(s);
 		}else if(s.trim().startsWith("while ") || s.trim().startsWith("while(")){
-			//System.out.println("WHILE: String: " + s);
+			System.out.println("WHILE: String: " + s);
 			whileLoopCount++;
 			return c.check_while(s);
 		}

@@ -264,7 +264,8 @@ public class ConstructParser {
                 assert(s.charAt(i) == ')');
                 if( s.charAt(i - 1) == ' ' )
                     for_incrementParen++;
-                if( s.length() <= i+1 && s.charAt(i + 1) == ' ')
+                System.out.println("String: " + s + " length: " + s.length() + " i: " + i);
+                if( s.length() < i+1 && s.charAt(i + 1) == ' ')
                     for_parenBracket++;
                 
                 
