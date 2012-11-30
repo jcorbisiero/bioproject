@@ -333,6 +333,10 @@ public class ConstructParser {
 
                 if( s.charAt(i) == '\"')
                     i = find_close_string(s,i+1);
+                
+                if( s.charAt(i) == '\'')
+                    i = find_close_char(s,i+1);
+               
                     
                 if( s.charAt(i) == '(') {
                     open_paren_counter++;
@@ -357,7 +361,6 @@ public class ConstructParser {
         }
         
         public int find_close_string(String s, int i){
-            int open_paren_counter = 0;
             
             System.out.println("Find Close String:  " + s + " " + i );
             
@@ -367,6 +370,27 @@ public class ConstructParser {
                     System.out.println("MULTIPLE LINE STRING: " + s + " " + i);
                     System.exit(1);
                 }
+            }
+            
+            return i;
+        }
+        
+         public int find_close_char(String s, int i){
+            
+            System.out.println("Find Close Char:  " + s + " " + i + " " +s.charAt(i) );
+            
+            while(s.charAt(i) != '\'') {
+                
+                if( s.length() <= i){
+                    System.out.println("MULTIPLE LINE CHAR: " + s + " " + i);
+                    System.exit(1);
+                }
+                
+                if( s.charAt(i) == '\\'){
+                    i = i + 2; // Skip \'
+                    continue;
+                }
+                i++;
             }
             
             return i;
