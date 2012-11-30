@@ -92,7 +92,7 @@ public class ConstructParser {
                 if( s.charAt( i + 1 ) == ' ') {
                     parenMiddle++;
                     open_paren_right++;
-                }
+                }   
                 
                /*
                 *  Get spacing between condition and paren and between
@@ -107,7 +107,7 @@ public class ConstructParser {
                     middleParen++;
                     close_paren_left++;
                 }
-                if( s.length() > i+1 || s.charAt(i + 1) == ' ') {
+                if( s.length() <= i+1 || s.charAt(i + 1) == ' ') { 
                     parenAfter++;
                     close_paren_right++;
                 }
@@ -253,7 +253,7 @@ public class ConstructParser {
                 assert(s.charAt(i) == ')');
                 if( s.charAt(i - 1) == ' ' )
                     for_incrementParen++;
-                if( s.length() > i+1 && s.charAt(i + 1) == ' ')
+                if( s.length() <= i+1 && s.charAt(i + 1) == ' ')
                     for_parenBracket++;
                 
                 
@@ -290,7 +290,7 @@ public class ConstructParser {
             int spacing = 0;
             if( index - 1 < 0 || s.charAt(index - 1) == ' ')
                 spacing++;
-            if( s.length() < index + 1 || s.charAt(index + stretch_right + 1) == ' ')
+            if( s.length() <= index + 1 || s.charAt(index + stretch_right + 1) == ' ')
                 spacing++;
             
             /* Keep assignment counting separate */
