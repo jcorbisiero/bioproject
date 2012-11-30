@@ -110,7 +110,8 @@ public class FeatureExtractor {
 					 * We know the line starts with /* but if it contains * / also
 					 * then is must be a single line comment and we can skip it
 					 */
-					if(strLine.trim().startsWith("/*")){
+					if(strLine.trim().startsWith("/*") && strLine.trim().endsWith("*/")){
+						System.out.println("!!!!!!!!!!!!!!!!!!!!!Skipped line: " + strLine);
 						continue;
 					}
 				}
@@ -133,14 +134,13 @@ public class FeatureExtractor {
 				 * one for the while loop
 				 * As of now they are summed up together as a single sum
 				 */
+				//strLine = removeComment(strLine);
 				codingStyle += test(strLine);
 				
 				/* 
 				 * Put this after eveything else because checking the situation 
 				 * where a block comment exists after some code is a little tricky
 				 * and I did it after everything else
-				*/
-				/*
 				 * Counts number of comments
 				 * If it sees a block comment, it will skip lines until the
 				 * end of the block comment is found
@@ -162,7 +162,7 @@ public class FeatureExtractor {
 				
 			}
 			in.close();
-			checkFunction(args[0], args[i]);
+			//checkFunction(args[0], args[i]);
 			String s = "comments: " + comments + "\nblockComments: " + blockComments + "\nnumOfLines: " + numOfLines + "\nwhileLoop: "
 					+ whileLoopCount + "\nforLoop: " + forLoopCount + "\nifCount: " + ifCount + "\nclasses: "
 					+ classes + "\nbracketCount:" + bracketCount + "\nall spaces: " + allSpaces + "\ncoding style spaces: " + codingStyle; 		
@@ -173,6 +173,61 @@ public class FeatureExtractor {
 		}
 	}
 
+	public static String helpRemoveComment(String s){
+		if(s.length() > 0){
+			//System.out.println("Should be some code here: " + s);
+			//now need to check if comment comes after code
+			if(s.endsWith("*/")){
+				int index2 = s.lastIndexOf("/*");
+				s = s.substring(0, index2-1).trim();
+				//System.out.println("Code after comment removed. Code: " + s);
+			}else{
+				for(int i = 0; i<s.length()-1; i++){
+					//System.out.println("looking at: " + temp.charAt(i));
+					if(s.charAt(i) == '/' && s.charAt(i+1) == '/'){
+						//System.out.println("subsequence == //");
+						if(s.charAt(i-1) == '"' && s.charAt(i+2) == '"'){
+							//came across false comment so skip
+							//something like System.out.println("//");
+							continue;
+						}else{
+							//now need to remove comment
+							s = s.substring(0, i-1).trim();
+							//System.out.println("Code after ending in //: " + s);
+							break;
+						}
+					}
+				}
+			}
+		}
+		System.out.println("final string: " + s);
+		return s;
+	}
+	//Check for the following situations
+	// 1) /* comment */ int a = b;
+	// 2) /* comment */
+	// 3) /* comment */ int a = b; /* comment */
+	// 4) /* comment */ int a = b; //comment
+	// 5) int a = b;
+	// 6) int a = b; /* comment */
+	// 7) int a = b; //comment
+	// 8) //int a = b; //comment
+	public static String removeComment(String s){
+		//System.out.println("Parse Comments");
+		System.out.println("String: " + s);
+		//block comment on same line as code, but before the code: /* */ code
+		if(s.startsWith("/*")){
+			int index = s.indexOf("*/");
+			if(index == -1){
+				//block comment possibly spanning multiple lines
+				return s;
+			}
+			String temp = s.substring(index+2).trim();
+			return helpRemoveComment(temp);		
+		} else{
+			return helpRemoveComment(s);
+		}
+	}
 
 	/*
 	 * test for line that contains only this string "{" as in:
@@ -181,21 +236,16 @@ public class FeatureExtractor {
 	 */
 	public static boolean singleOpenBracket(String s, String bracket){
 		s = s.trim();
-		
+		if(s.startsWith("{")){
+			System.out.println("started with {");
+		}
 		//System.out.println("In Single Open Bracket");
 		//System.out.println("After trim: " + s);
 		
-		if(s.length() > 0 && s.contains("//")){	
-			/*
-			 * dont need to do the if check here as seen below
-			 * with * / because a line with only a //comment is 
-			 * taken care of in the beginning and the program
-			 * read the next line in
-			 */
+		/*if(s.length() > 0 && s.contains("//")){	
 			
-			/*
-			 * Checks for case where { is followed by // type of comment
-			 */
+			
+			
 			//System.out.println("Comment after code, same line");
 			int n = s.indexOf("//");
 			System.out.println("// n: " + n);
@@ -203,9 +253,7 @@ public class FeatureExtractor {
 			//System.out.println("after substring: " + s); 
 		}else if (s.length() > 0 && s.contains("/*")){
 			
-			/*
-			 * Checks for case where { is followed by /* type of comment
-			 */
+			
 			
 			//System.out.println("Comment after code, same line");
 			if(!s.startsWith("/*")){
@@ -221,8 +269,10 @@ public class FeatureExtractor {
 		 * Check after string manipulation
 		 * if what remains is equal to "{"
 		 */
-		if(s.equals(bracket))
+		if(s.equals(bracket)){
+			System.out.println("OPEN BRACKET FOUND!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 			return true;
+		}
 	
 		return false;
 	}
@@ -245,79 +295,6 @@ public class FeatureExtractor {
 	public static int test(String s){
 		//System.out.println("In Test");
 		System.out.println("String: " + s);
-		String temp = null;
-		if(s.length() > 2 && s.contains("//")){
-			//System.out.println("Comment after code, same line");
-			int n = s.indexOf("//");
-			//System.out.println("n: " + n);
-			temp = s.substring(0, n-1);
-			//System.out.println("after substring: " + temp); 
-			
-			/* 
-			 * Clean up the string to remove unnecessary tabs that we dont care about 
-			 */
-			
-			StringTokenizer st = new StringTokenizer(temp, "\t\n");
-			temp = st.nextToken().trim();
-
-			/* 
-			 * Now that we have a clean string we need
-			 * to check the different conditions
-			 * mentioned above
-			 */
-
-			//System.out.println("after trim: " + temp); 
-			//System.out.println("Coding style spaces: " + codingStyle(temp)); 
-			return codingStyle(temp);
-		}else if(s.length() > 2 && s.contains("/*")){ // same above but now with /* condition
-			//System.out.println("Comment after code, same line");
-			if(!s.trim().startsWith("/*")){
-				int n = s.indexOf("/*");
-				//System.out.println("n: " + n);
-				temp = s.substring(0, n-1);
-			}
-			//System.out.println("after substring: " + temp); 
-			
-			/* 
-			 * Clean up the string to remove unnecessary tabs that we dont care about
-			 */
-			if(temp == null)
-				return 0;
-			System.out.println("temp" + temp.length());
-			StringTokenizer st = new StringTokenizer(temp, "\t\n");
-			temp = st.nextToken().trim();
-			
-			/* 
-			 * Now that we have a clean string we need
-			 * to check the different conditions
-			 * mentioned above
-			 */
-
-			//System.out.println("after trim: " + temp); 
-			//System.out.println("Coding style spaces: " + codingStyle(temp)); 
-			return codingStyle(temp);
-		}
-
-		/*
-		 * If we are here that means line has no comments
-		 */
-		
-		//System.out.println("No comments seen so far...");
-
-		/* 
-		 * Clean up the string to remove unnecessary tabs that we dont care about 
-		 */
-		
-		//System.out.println("before trim: " + s);
-		s = s.trim();
-		//System.out.println("after trim: " + s); 
-		
-		/* 
-		 * Now that we have a clean string we need
-		 * to check the different conditions
-		 * mentioned above
-		 */
-		
 		//System.out.println("Coding style spaces: " + codingStyle(s)); 
 		return codingStyle(s);
 	}
@@ -336,15 +313,15 @@ public class FeatureExtractor {
 	 */
 	public static int codingStyle(String s){
 		//System.out.println("check coding style");
-		if(s.startsWith("if")){
+		if(s.trim().startsWith("if ") || s.trim().startsWith("if(")){
 			//System.out.println("IF: String: " + s);
 			ifCount++;
 			return c.check_if(s);
-		}else if(s.startsWith("for")){
+		}else if(s.trim().startsWith("for ") || s.trim().startsWith("for(")){
 			//System.out.println("FOR: String: " + s);
 			forLoopCount++;
 			return c.check_for(s);
-		}else if(s.startsWith("while")){
+		}else if(s.trim().startsWith("while ") || s.trim().startsWith("while(")){
 			//System.out.println("WHILE: String: " + s);
 			whileLoopCount++;
 			return c.check_while(s);
@@ -385,10 +362,10 @@ public class FeatureExtractor {
 		//System.out.println("After concat: " + fullPath);
 
 		
-		//Class<?> cls = Class.forName(fullPath); 
-		//functions += cls.getDeclaredMethods().length;
-		//classes += cls.getClasses().length;
-		//fields += cls.getDeclaredFields().length;
+		Class<?> cls = Class.forName(fullPath); 
+		functions += cls.getDeclaredMethods().length;
+		classes += cls.getClasses().length;
+		fields += cls.getDeclaredFields().length;
 		//System.out.println("functions: " + functions + "\nclasses: " + classes + "\nfields: " + fields);
 	}
 	
