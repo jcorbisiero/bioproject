@@ -16,7 +16,7 @@ import java.util.StringTokenizer;
 
 /**
  *
- * @author Ilan
+ * @author Ilan, Joe
  */
 public class FeatureExtractor {
 	/*
@@ -34,12 +34,13 @@ public class FeatureExtractor {
 	 * Number of fields
 	 */
     
-        static ConstructParser c = new ConstructParser();
+    static ConstructParser c = new ConstructParser();
 	
 	static int numOfLines = 0;
 	static int whileLoopCount = 0;
 	static int forLoopCount = 0;
 	static int comments = 0;
+	static int blockComments = 0;
 	static int ifCount = 0;
 	static int classes = 0;
 	static int bracketCount = 0;
@@ -76,16 +77,7 @@ public class FeatureExtractor {
 		String pseudonym = args[0];
 		for(int i = 1; i<args.length; i++){
 			System.out.println("Looking at file: " + i);
-			/*numOfLines = 0;
-			whileLoopCount = 0;
-			forLoopCount = 0;
-			comments = 0;
-			ifCount = 0;
-			classCount = 0;
-			bracketCount = 0;
-			allSpaces = 0;
-			codingStyle = 0;*/
-			
+						
 			FileInputStream fstream = new FileInputStream(args[i]);
 			DataInputStream in = new DataInputStream(fstream);
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -98,9 +90,7 @@ public class FeatureExtractor {
 				//allSpaces += countAllSpaces(strLine);
 				
 				/*
-				 * Counts number of comments
-				 * If it sees a block comment, it will skip lines until the
-				 * end of the block comment is found
+				 * Count number of comments/blockComments
 				 */
 				
 				if(strLine.contains(singleComm)) {
@@ -113,7 +103,7 @@ public class FeatureExtractor {
 						continue;
 					}
 				} else if(strLine.contains(startBlockComm) && strLine.contains(endBlockComm)){
-					comments++;
+					blockComments++;
 					//System.out.println(strLine);
 
 					/*
@@ -129,15 +119,12 @@ public class FeatureExtractor {
 				 * Check for line that contains "{" as the only
 				 * piece of code
 				 */
-				//if(singleOpenBracket(strLine, bracket)){
-				//	bracketCount++;
-				//	continue;
-				//}
+				if(singleOpenBracket(strLine, bracket)){
+					bracketCount++;
+					continue;
+				}
 				
 				
-				
-				
-
 				/*
 				 * Get the coding style spaces
 				 * If needed, we can have individual features:
@@ -153,15 +140,20 @@ public class FeatureExtractor {
 				 * where a block comment exists after some code is a little tricky
 				 * and I did it after everything else
 				*/
+				/*
+				 * Counts number of comments
+				 * If it sees a block comment, it will skip lines until the
+				 * end of the block comment is found
+				 */
 				if(strLine.contains(startBlockComm)  && !strLine.contains(endBlockComm)){
-					//comments++;
+					blockComments++;
 					//System.out.println(strLine);
 					/*
 					 * Skip the lines in the block comment until we see a * / 
 					 */
 					for(;;){
 						strLine = br.readLine();
-						System.out.println(strLine);
+						//System.out.println(strLine);
 						if(strLine.contains("*/")){
 							break;
 						}
@@ -171,7 +163,7 @@ public class FeatureExtractor {
 			}
 			in.close();
 			checkFunction(args[0], args[i]);
-			String s = "comments: " + comments + "\nnumOfLines: " + numOfLines + "\nwhileLoop: "
+			String s = "comments: " + comments + "\nblockComments: " + blockComments + "\nnumOfLines: " + numOfLines + "\nwhileLoop: "
 					+ whileLoopCount + "\nforLoop: " + forLoopCount + "\nifCount: " + ifCount + "\nclasses: "
 					+ classes + "\nbracketCount:" + bracketCount + "\nall spaces: " + allSpaces + "\ncoding style spaces: " + codingStyle; 		
 			System.out.println(s);		
@@ -182,6 +174,59 @@ public class FeatureExtractor {
 	}
 
 
+	/*
+	 * test for line that contains only this string "{" as in:
+	 * if (condition)
+	 * { <-----
+	 */
+	public static boolean singleOpenBracket(String s, String bracket){
+		s = s.trim();
+		
+		//System.out.println("In Single Open Bracket");
+		//System.out.println("After trim: " + s);
+		
+		if(s.length() > 0 && s.contains("//")){	
+			/*
+			 * dont need to do the if check here as seen below
+			 * with * / because a line with only a //comment is 
+			 * taken care of in the beginning and the program
+			 * read the next line in
+			 */
+			
+			/*
+			 * Checks for case where { is followed by // type of comment
+			 */
+			//System.out.println("Comment after code, same line");
+			int n = s.indexOf("//");
+			System.out.println("// n: " + n);
+			s = s.substring(0, n-1);
+			//System.out.println("after substring: " + s); 
+		}else if (s.length() > 0 && s.contains("/*")){
+			
+			/*
+			 * Checks for case where { is followed by /* type of comment
+			 */
+			
+			//System.out.println("Comment after code, same line");
+			if(!s.startsWith("/*")){
+				int n = s.indexOf("/*");
+				//System.out.println("/* n: " + n);
+				s = s.substring(0, n-1);
+			}else
+				return false;
+			//System.out.println("after substring: " + s); 
+		}
+		
+		/*
+		 * Check after string manipulation
+		 * if what remains is equal to "{"
+		 */
+		if(s.equals(bracket))
+			return true;
+	
+		return false;
+	}
+	
 	/*
 	 * Counts all spaces, including those in comments
 	 */
@@ -199,7 +244,7 @@ public class FeatureExtractor {
 	 */ 
 	public static int test(String s){
 		//System.out.println("In Test");
-		System.out.println("String: " + s);
+		//System.out.println("String: " + s);
 		String temp = null;
 		if(s.length() > 2 && s.contains("//")){
 			//System.out.println("Comment after code, same line");
@@ -296,7 +341,7 @@ public class FeatureExtractor {
 			ifCount++;
 			return c.check_if(s);
 		}else if(s.startsWith("for")){
-			System.out.println("FOR: String: " + s);
+			//System.out.println("FOR: String: " + s);
 			forLoopCount++;
 			return c.check_for(s);
 		}else if(s.startsWith("while")){
@@ -314,15 +359,15 @@ public class FeatureExtractor {
 		//String packName = "featureExtractor.";
 		packName = packName.concat(".");
 		//System.out.println("packName: " + packName);
-		System.out.println("Before sub: " + s);
+		//System.out.println("Before sub: " + s);
 		int index = s.lastIndexOf("/");
 		String className = s.substring(index+1, s.length());
 		index = className.indexOf('.');
 		className = className.substring(0, index);
-		System.out.println("After sub: " + className);
+		//System.out.println("After sub: " + className);
 		
 		String fullPath = packName.concat(className);
-		System.out.println("After concat: " + fullPath);
+		//System.out.println("After concat: " + fullPath);
 
 		
 		Class<?> cls = Class.forName(fullPath); 
