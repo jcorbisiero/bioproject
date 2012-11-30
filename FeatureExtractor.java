@@ -349,6 +349,21 @@ public class FeatureExtractor {
 			whileLoopCount++;
 			return c.check_while(s);
 		}
+                
+                /* 
+                 * Check for assignment and equality spacing
+                 */
+                String temp  = new String(s);
+                int [] assignEqArray;
+                int assignIndex = -1; // This needs to be -1
+                int stretch_right = 0;
+                
+                do {
+                    temp            = temp.substring(assignIndex + stretch_right + 1);
+                    assignEqArray   = c.checkAssignmentOrEquality(temp);
+                    assignIndex     = assignEqArray[0];
+                    stretch_right   = assignEqArray[1];
+                } while( assignIndex != -1 );
 
 		return 0;
 	}
