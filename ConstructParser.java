@@ -100,6 +100,9 @@ public class ConstructParser {
                 */            
                 //Take care of special cases
                 i++; // Push past open paren
+                
+                System.out.println("GenericPS: " + s + " " + s.charAt(i) + " " + i);
+                
                 i = find_close_paren(s,i);
 
                 assert(s.charAt(i) == ')');
@@ -143,7 +146,11 @@ public class ConstructParser {
                 else
                     if_bracketNewline++;
                 
-		for(int j = 2; j < s.length(); j++){
+                int check_until = i;
+                if( s.indexOf("{") != -1)
+                    check_until = s.indexOf('{');
+                    
+		for(int j = 2; j < check_until; j++){
 			if(s.charAt(j) == ' '){
 				count++;
 			}
@@ -176,7 +183,11 @@ public class ConstructParser {
                 else
                     while_bracketNewline++;
 
-		for(int j = 5; j < s.length(); j++){
+                int check_until = i;
+                if( s.indexOf("{") != -1)
+                    check_until = s.indexOf('{');
+                
+		for(int j = 5; j < check_until; j++){
 			//System.out.println("char: " + s.charAt(i));
 			if(s.charAt(j) == ' '){
 				count++;
@@ -265,8 +276,11 @@ public class ConstructParser {
                 else
                     for_bracketNewline++;
 		
+                int check_until = i;
+                if( s.indexOf("{") != -1)
+                    check_until = s.indexOf('{');
                 
-                for(int j = 3; j < s.length(); j++){
+                for(int j = 3; j < check_until; j++){
 			//System.out.println("char: " + s.charAt(i));
 			if(s.charAt(j) == ' '){
 				count++;
@@ -312,8 +326,14 @@ public class ConstructParser {
         
         public int find_close_paren(String s, int i){
             int open_paren_counter = 0;
+            
+            System.out.println("Find Close Paren:  " + s + " " + i );
+            
             while(s.charAt(i) != ')' || open_paren_counter > 0) {
-                
+
+                if( s.charAt(i) == '\"')
+                    i = find_close_string(s,i+1);
+                    
                 if( s.charAt(i) == '(') {
                     open_paren_counter++;
                     if( s.charAt(i - 1) == ' ' )
@@ -335,6 +355,23 @@ public class ConstructParser {
             
             return i;
         }
+        
+        public int find_close_string(String s, int i){
+            int open_paren_counter = 0;
+            
+            System.out.println("Find Close String:  " + s + " " + i );
+            
+            while(s.charAt(i) != '\"') {
+                i++;
+                if( s.length() <= i){
+                    System.out.println("MULTIPLE LINE STRING: " + s + " " + i);
+                    System.exit(1);
+                }
+            }
+            
+            return i;
+        }
+        
         
         
         public int [] containsAssignmentOrEquality(String s){
