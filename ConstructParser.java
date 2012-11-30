@@ -11,7 +11,17 @@ package featureExtractor;
 public class ConstructParser {
     
         /*
+         *  Spaces around an assignment or equality operand( + - == >=....)
+         *  Also counts the amount of opporutnities to later normalize
+         */
+         int assignment = 0;
+         int assignmentOpp = 0;
+         int equality = 0;
+         int equalityOpp = 0;
+    
+        /*
          *  Spaces around regular parenthesis
+         *      Includes construct parens(if,while,for)
          */
          int open_paren_left = 0;
          int open_paren_right = 0;
@@ -75,10 +85,14 @@ public class ConstructParser {
                 while( s.charAt(i) != '(' )
                     i++;
                 assert(s.charAt(i) == '(');
-                if( s.charAt( i - 1 ) == ' ')
+                if( s.charAt( i - 1 ) == ' ') {
                     constructParen++;
-                if( s.charAt( i + 1 ) == ' ')
+                    open_paren_left++;
+                }
+                if( s.charAt( i + 1 ) == ' ') {
                     parenMiddle++;
+                    open_paren_right++;
+                }
                 
                /*
                 *  Get spacing between condition and paren and between
@@ -89,10 +103,14 @@ public class ConstructParser {
                 i = find_close_paren(s,i);
 
                 assert(s.charAt(i) == ')');
-                if( s.charAt(i - 1) == ' ' )
+                if( s.charAt(i - 1) == ' ' ) {
                     middleParen++;
-                if( s.length() > i+1 && s.charAt(i + 1) == ' ')
+                    close_paren_left++;
+                }
+                if( s.length() > i+1 || s.charAt(i + 1) == ' ') {
                     parenAfter++;
+                    close_paren_right++;
+                }
 
                 int array [] = {i, constructParen, parenMiddle, middleParen, parenAfter};
                 return array;
@@ -227,8 +245,8 @@ public class ConstructParser {
                 }
                 
                 /* 
-                 *  Get spacing between condition and paren and between
-                 *      parent and bracket
+                 *  Get spacing between increment and paren and between
+                 *      paren and bracket
                  */             
                 i = find_close_paren(s,i);
                 
@@ -259,6 +277,35 @@ public class ConstructParser {
 		return count;
 	}
         
+        public int [] checkAssignmentOrEquality(String s){
+            
+            int array [] = containsAssignmentOrEquality(s);
+            if( array[0] == -1)
+                return array;
+            
+            int index = array[0];
+            int stretch_right = array[1];
+            
+            
+            int spacing = 0;
+            if( index - 1 < 0 || s.charAt(index - 1) == ' ')
+                spacing++;
+            if( s.length() < index + 1 || s.charAt(index + stretch_right + 1) == ' ')
+                spacing++;
+            
+            /* Keep assignment counting separate */
+            if( s.charAt(index) == '=' && stretch_right == 0){
+                assignment += spacing;
+                assignmentOpp += 2;
+            }
+            else {
+                equality += spacing;
+                equalityOpp += 2;
+            }
+            
+            return array;
+        }
+        
         
         
         /* Helper methods */
@@ -266,7 +313,7 @@ public class ConstructParser {
         public int find_close_paren(String s, int i){
             int open_paren_counter = 0;
             while(s.charAt(i) != ')' || open_paren_counter > 0) {
-          
+                
                 if( s.charAt(i) == '(') {
                     open_paren_counter++;
                     if( s.charAt(i - 1) == ' ' )
@@ -289,7 +336,112 @@ public class ConstructParser {
             return i;
         }
         
-        public static boolean isForEachLoop(String s){
+        
+        public int [] containsAssignmentOrEquality(String s){
+            
+            int min_index = Integer.MAX_VALUE;
+            int index;
+            int stretch_right = 0;
+            
+            /* First putting two character operands or equality */
+            
+            if( (index = s.indexOf("==")) != -1 && index < min_index) {
+                min_index = index;
+                stretch_right = 1;
+            }
+            
+            if( (index = s.indexOf("!=")) != -1 && index < min_index) {
+                min_index = (index < min_index) ? index : min_index;
+                stretch_right = 1;
+            }
+            
+            if( (index = s.indexOf("<=")) != -1 && index < min_index) {
+                min_index = (index < min_index) ? index : min_index;
+                stretch_right = 1;
+            }
+            
+            if( (index = s.indexOf(">=")) != -1 && index < min_index) {
+                min_index = (index < min_index) ? index : min_index;
+                stretch_right = 1;
+            }
+            
+            if( (index = s.indexOf(">=")) != -1 && index < min_index) {
+                min_index = (index < min_index) ? index : min_index;
+                stretch_right = 1;
+            }
+            
+            if( (index = s.indexOf("++")) != -1 && index < min_index) {
+                min_index = (index < min_index) ? index : min_index;
+                stretch_right = 1;
+            }
+            
+            if( (index = s.indexOf("--")) != -1 && index < min_index) {
+                min_index = (index < min_index) ? index : min_index;
+                stretch_right = 1;
+            }
+            
+            /* Now come the single operand or equality */
+                       
+            if( (index = s.indexOf("=")) != -1 && index < min_index) {
+                min_index = (index < min_index) ? index : min_index;
+                stretch_right = 0;
+            }
+            
+            if( (index = s.indexOf("<")) != -1 && index < min_index) {
+                min_index = (index < min_index) ? index : min_index;
+                stretch_right = 0;
+            }
+            
+            if( (index = s.indexOf(">")) != -1 && index < min_index) {
+                min_index = (index < min_index) ? index : min_index;
+                stretch_right = 0;
+            }
+            
+            if( (index = s.indexOf("?")) != -1 && index < min_index) {
+                min_index = (index < min_index) ? index : min_index;
+                stretch_right = 0;
+            }
+            
+            if( (index = s.indexOf(":")) != -1 && index < min_index) {
+                min_index = (index < min_index) ? index : min_index;
+                stretch_right = 0;
+            }
+            
+            if( (index = s.indexOf("%")) != -1 && index < min_index) {
+                min_index = (index < min_index) ? index : min_index;
+                stretch_right = 0;
+            }
+            
+            if( (index = s.indexOf("+")) != -1 && index < min_index) {
+                min_index = (index < min_index) ? index : min_index;
+                stretch_right = 0;
+            }
+            
+            /*
+             * FALSE POSITIVE ON NEGATIVE NUMBERS -- Possible ignore/fix?
+             */
+            if( (index = s.indexOf("-")) != -1 && index < min_index) {
+                min_index = (index < min_index) ? index : min_index;
+                stretch_right = 0;
+            }
+            
+            if( (index = s.indexOf("*")) != -1 && index < min_index) {
+                min_index = (index < min_index) ? index : min_index;
+                stretch_right = 0;
+            }
+            
+            if( (index = s.indexOf("/")) != -1 && index < min_index) {
+                min_index = (index < min_index) ? index : min_index;
+                stretch_right = 0;
+            }
+            
+            int returnIndex = (min_index != Integer.MAX_VALUE) ? min_index : -1;
+            
+            int array [] = {returnIndex, stretch_right};
+            return array;
+        }
+        
+        public boolean isForEachLoop(String s){
             return s.contains(":");
         }
         
