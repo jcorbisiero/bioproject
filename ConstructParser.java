@@ -264,8 +264,7 @@ public class ConstructParser {
                 assert(s.charAt(i) == ')');
                 if( s.charAt(i - 1) == ' ' )
                     for_incrementParen++;
-                System.out.println("String: " + s + " length: " + s.length() + " i: " + i);
-                if( s.length() < i+1 && s.charAt(i + 1) == ' ')
+                if( s.length() <= i+1 && s.charAt(i + 1) == ' ')
                     for_parenBracket++;
                 
                 
@@ -300,12 +299,11 @@ public class ConstructParser {
             
             int index = array[0];
             int stretch_right = array[1];
-            
-            
+
             int spacing = 0;
             if( index - 1 < 0 || s.charAt(index - 1) == ' ')
                 spacing++;
-            if( s.length() <= index + 1 || s.charAt(index + stretch_right + 1) == ' ')
+            if( s.length() <= index + stretch_right + 1 || s.charAt(index + stretch_right + 1) == ' ')
                 spacing++;
             
             /* Keep assignment counting separate */
@@ -330,7 +328,8 @@ public class ConstructParser {
             
             System.out.println("Find Close Paren:  " + s + " " + i );
             
-            while(s.charAt(i) != ')' /*|| open_paren_counter > 0*/) {
+            while(s.charAt(i) != ')' || open_paren_counter > 0) {
+
                 if( s.charAt(i) == '\"')
                     i = find_close_string(s,i+1);
                 
@@ -354,7 +353,6 @@ public class ConstructParser {
                         close_paren_right++;
                     
                 }
-                System.out.println("Done looking at char: " + s.charAt(i));
                 i++;
             }
             
