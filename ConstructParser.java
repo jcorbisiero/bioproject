@@ -26,7 +26,10 @@ public class ConstructParser {
          int open_paren_left = 0;
          int open_paren_right = 0;
          int close_paren_left = 0;
+         int close_paren_leftOpp = 0;
          int close_paren_right = 0;
+         int open_parenOpp = 0;
+         int close_parenOpp = 0;
     
         /*  
          *  Spaces within IF statement
@@ -94,6 +97,8 @@ public class ConstructParser {
                     open_paren_right++;
                 }   
                 
+                open_parenOpp++;
+                
                /*
                 *  Get spacing between condition and paren and between
                 *      parent and bracket
@@ -114,6 +119,8 @@ public class ConstructParser {
                     parenAfter++;
                     close_paren_right++;
                 }
+                
+                close_parenOpp++;
 
                 int array [] = {i, constructParen, parenMiddle, middleParen, parenAfter};
                 return array;
@@ -214,12 +221,16 @@ public class ConstructParser {
                 while( s.charAt(i) != '(' )
                     i++;
                 assert(s.charAt(i) == '(');
-                if( s.charAt( i - 1 ) == ' ')
+                if( s.charAt( i - 1 ) == ' '){
                     for_forParen++;
-                if( s.charAt( i + 1 ) == ' ')
+                    open_paren_left++;
+                }
+                if( s.charAt( i + 1 ) == ' '){
                     for_parenVariable++;
+                    open_paren_right++;
+                }
                 
-                
+                open_parenOpp++;
                 
                 //Skip this next part if this is a foreach loop
                 if( !isForEachLoop(s) )
@@ -250,9 +261,12 @@ public class ConstructParser {
                        
                     if( s.charAt(i-1) == ' ')
                         for_conditionSemi++;
-                    if( s.length() < i+1 && s.charAt(i+1) == ' ')
+                    if( s.charAt(i+1) == ' ')
                         for_semiIncrement++;
                     
+                }
+                else{ // FOR EACH LOOP
+                    i++;
                 }
                 
                 /* 
@@ -262,11 +276,17 @@ public class ConstructParser {
                 i = find_close_paren(s,i);
                 
                 assert(s.charAt(i) == ')');
-                if( s.charAt(i - 1) == ' ' )
+                if( s.charAt(i - 1) == ' ' ){
                     for_incrementParen++;
-                System.out.println("length:" + s.length() + "curr i: " + i);
-                if( s.length() < i+1 && s.charAt(i + 1) == ' ')
+                    close_paren_left++;
+                }
+                
+                if( s.length() <= i+1 || s.charAt(i + 1) == ' ') {
                     for_parenBracket++;
+                    close_paren_right++;
+                }
+                
+                close_parenOpp++;
                 
                 
                 /*
@@ -327,9 +347,9 @@ public class ConstructParser {
         public int find_close_paren(String s, int i){
             int open_paren_counter = 0;
             
-            System.out.println("Find Close Paren:  " + s + " " + i );
+            System.out.println("Find Close Paren:  " + s + " " + i + " " + s.charAt(i) );
             
-            while(s.length() < i && s.charAt(i) != ')' || open_paren_counter > 0) {
+            while(s.charAt(i) != ')' || open_paren_counter > 0) {
 
                 if( s.charAt(i) == '\"')
                     i = find_close_string(s,i+1);
@@ -344,17 +364,18 @@ public class ConstructParser {
                         open_paren_left++;
                     if( s.charAt(i + 1) == ' ')
                         open_paren_right++;
+                    open_parenOpp++;
+                
                 }
-                System.out.println("open paren counter after possible inc: " + open_paren_counter);
+                
                 if( s.charAt(i) == ')') {
                     open_paren_counter--;
                     if( s.charAt(i - 1) == ' ' )
                         close_paren_left++;
                     if( s.charAt(i + 1) == ' ')
                         close_paren_right++;
-                    
+                    close_parenOpp++;
                 }
-                System.out.println("open paren counter after possible dec: " + open_paren_counter);
                 i++;
             }
             
