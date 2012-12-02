@@ -250,7 +250,7 @@ public class ConstructParser {
                        
                     if( s.charAt(i-1) == ' ')
                         for_conditionSemi++;
-                    if( s.charAt(i+1) == ' ')
+                    if( s.length() < i+1 && s.charAt(i+1) == ' ')
                         for_semiIncrement++;
                     
                 }
