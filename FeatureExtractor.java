@@ -20,22 +20,24 @@ import java.util.StringTokenizer;
  */
 public class FeatureExtractor {
 	/*
-	 * Features:
-	 * Number of comments
+	 * 17 Features:
+	 * Number of // comments
+	 * Number of block comments
 	 * Number of lines
-	 * Coding style with spacing in if conditon, while and for loops
-	 * Number of condition statements
+	 * Number of if condition statements
 	 * Number of while loops
 	 * Number of for loops
-	 * Number of classes
-	 * Number of functions
 	 * Number of single "{" on a line situation
 	 * Number of all spaces
-	 * Number of fields
+	 * Number of CSS in if conditon, while and for loops between:
+	 * 1) assignment
+	 * 2) equality
+	 * 3) oen parens left and right
+	 * 4) close parens left and right
 	 */
-    
-    static ConstructParser c = new ConstructParser();
 	
+	static ConstructParser c = new ConstructParser();
+
 	static int numOfLines = 0;
 	static int whileLoopCount = 0;
 	static int forLoopCount = 0;
@@ -48,7 +50,7 @@ public class FeatureExtractor {
 	static int codingStyle = 0;
 	static int functions = 0;
 	static int fields = 0;
-        
+
 	public static void main(String args[]) throws IOException, ClassNotFoundException
 	{
 		String singleComm = "//";
@@ -72,31 +74,30 @@ public class FeatureExtractor {
 		 * 	public foo()
 		 * 	{
 		 */
-		String header = "Class\tComments\tBComments\tNumOfLines\tWhileCount\tForCount\tIfCondCount\tClassCount\tBracketCount\tAllSpaces\tCSS";
-		writeHeader(header);
+
+		writeHeader();
 		String pseudonym = args[0];
 		for(int i = 1; i<args.length; i++){
 			System.out.println("Looking at file: " + i);
-						
+
 			FileInputStream fstream = new FileInputStream(args[i]);
 			DataInputStream in = new DataInputStream(fstream);
 			BufferedReader br = new BufferedReader(new InputStreamReader(in));
 			String strLine;
 			while ((strLine = br.readLine()) != null) {
-				
+
 				//System.out.println("Line currently being looked at: " + strLine);
-				
+
 				numOfLines++;
 				//allSpaces += countAllSpaces(strLine);
-				
+
 				/*
 				 * Count number of comments/blockComments
 				 */
-				
 				if(strLine.contains(singleComm)) {
 					//System.out.println(strLine);
 					comments++;
-					
+
 					//line is a comment only
 					if(strLine.trim().startsWith("//")){
 						//System.out.println("Comment only line: " + strLine);
@@ -115,7 +116,7 @@ public class FeatureExtractor {
 						continue;
 					}
 				}
-				
+
 				/*
 				 * Check for line that contains "{" as the only
 				 * piece of code
@@ -124,8 +125,8 @@ public class FeatureExtractor {
 					bracketCount++;
 					continue;
 				}
-				
-				
+
+
 				/*
 				 * Get the coding style spaces
 				 * If needed, we can have individual features:
@@ -134,9 +135,9 @@ public class FeatureExtractor {
 				 * one for the while loop
 				 * As of now they are summed up together as a single sum
 				 */
-				//strLine = removeComment(strLine);
+				strLine = removeComment(strLine);
 				codingStyle += test(strLine);
-				
+
 				/* 
 				 * Put this after eveything else because checking the situation 
 				 * where a block comment exists after some code is a little tricky
@@ -159,7 +160,7 @@ public class FeatureExtractor {
 						}
 					}
 				}
-				
+
 			}
 			in.close();
 			//checkFunction(args[0], args[i]);
@@ -167,9 +168,7 @@ public class FeatureExtractor {
 					+ whileLoopCount + "\nforLoop: " + forLoopCount + "\nifCount: " + ifCount + "\nclasses: "
 					+ classes + "\nbracketCount:" + bracketCount + "\nall spaces: " + allSpaces + "\ncoding style spaces: " + codingStyle; 		
 			System.out.println(s);		
-			String fileStr = pseudonym + "\t" + comments + "\t\t" + blockComments + "\t\t" + numOfLines + "\t\t" + whileLoopCount + "\t\t" + forLoopCount + "\t\t" + ifCount + "\t\t" 
-							+ classes + "\t\t" + bracketCount + "\t\t" + allSpaces + "\t\t" + codingStyle;
-			writeData(fileStr);
+			writeData(getClassData(pseudonym));
 		}
 	}
 
@@ -239,44 +238,14 @@ public class FeatureExtractor {
 		if(s.startsWith("{")){
 			System.out.println("started with {");
 		}
-		//System.out.println("In Single Open Bracket");
-		//System.out.println("After trim: " + s);
-		
-		/*if(s.length() > 0 && s.contains("//")){	
-			
-			
-			
-			//System.out.println("Comment after code, same line");
-			int n = s.indexOf("//");
-			System.out.println("// n: " + n);
-			s = s.substring(0, n-1);
-			//System.out.println("after substring: " + s); 
-		}else if (s.length() > 0 && s.contains("/*")){
-			
-			
-			
-			//System.out.println("Comment after code, same line");
-			if(!s.startsWith("/*")){
-				int n = s.indexOf("/*");
-				//System.out.println("/* n: " + n);
-				s = s.substring(0, n-1);
-			}else
-				return false;
-			//System.out.println("after substring: " + s); 
-		}
-		
-		/*
-		 * Check after string manipulation
-		 * if what remains is equal to "{"
-		 */
 		if(s.equals(bracket)){
 			System.out.println("OPEN BRACKET FOUND!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 			return true;
 		}
-	
+
 		return false;
 	}
-	
+
 	/*
 	 * Counts all spaces, including those in comments
 	 */
@@ -298,7 +267,7 @@ public class FeatureExtractor {
 		//System.out.println("Coding style spaces: " + codingStyle(s)); 
 		return codingStyle(s);
 	}
-        
+
 	/*
 	 * Check for situation where coding style is like the following:
 	 * if(condition) 
@@ -315,7 +284,6 @@ public class FeatureExtractor {
 		//System.out.println("check coding style");
 		if(s.trim().startsWith("if ") || s.trim().startsWith("if(")){
 			//System.out.println("IF: String: " + s);
-
 			ifCount++;
 			return c.check_if(s);
 		}else if(s.trim().startsWith("for ") || s.trim().startsWith("for(")){
@@ -327,26 +295,26 @@ public class FeatureExtractor {
 			whileLoopCount++;
 			return c.check_while(s);
 		}
-                
-                /* 
-                 * Check for assignment and equality spacing
-                 */
-                String temp  = new String(s);
-                int [] assignEqArray;
-                int assignIndex = -1; // This needs to be -1
-                int stretch_right = 0;
-                
-                do {
-                    temp            = temp.substring(assignIndex + stretch_right + 1);
-                    assignEqArray   = c.checkAssignmentOrEquality(temp);
-                    assignIndex     = assignEqArray[0];
-                    stretch_right   = assignEqArray[1];
-                } while( assignIndex != -1 );
+
+		/* 
+		 * Check for assignment and equality spacing
+		 */
+		String temp  = new String(s);
+		int [] assignEqArray;
+		int assignIndex = -1; // This needs to be -1
+		int stretch_right = 0;
+
+		do {
+			temp            = temp.substring(assignIndex + stretch_right + 1);
+			assignEqArray   = c.checkAssignmentOrEquality(temp);
+			assignIndex     = assignEqArray[0];
+			stretch_right   = assignEqArray[1];
+		} while( assignIndex != -1 );
 
 		return 0;
 	}
 
-	//to be implemented
+	//probably will be deleted
 	public static void checkFunction(String packName, String s) throws ClassNotFoundException {
 		//pass in args[0] here too
 		//String packName = "featureExtractor.";
@@ -358,25 +326,35 @@ public class FeatureExtractor {
 		index = className.indexOf('.');
 		className = className.substring(0, index);
 		//System.out.println("After sub: " + className);
-		
+
 		String fullPath = packName.concat(className);
 		//System.out.println("After concat: " + fullPath);
 
-		
+
 		Class<?> cls = Class.forName(fullPath); 
 		functions += cls.getDeclaredMethods().length;
 		classes += cls.getClasses().length;
 		fields += cls.getDeclaredFields().length;
 		//System.out.println("functions: " + functions + "\nclasses: " + classes + "\nfields: " + fields);
 	}
-	
-	public static void writeHeader(String s) throws IOException{
+
+	public static String getFileHeader(){
+		return "Class\tComments\tBComments\tNumOfLines\tWhileCount\tForCount\tIfCondCount\tBracketCount\tAllSpaces\tCSS" +
+				"\tAssignment\tAssignOpp\tEquality\tEqualityOpp\tOpenParenL\tOpenParenR\tCloseParenL\tCloseParenR";
+	}
+
+	public static String getClassData(String pseudonym){
+		return pseudonym + "\t" + comments + "\t\t" + blockComments + "\t\t" + numOfLines + "\t\t" + whileLoopCount + "\t\t" + forLoopCount + "\t\t" + ifCount + 
+				"\t\t" + bracketCount + "\t\t" + allSpaces + "\t\t" + codingStyle + "\t\t" + c.assignment + "\t\t" + c.assignmentOpp + 	"\t\t" + c.equality +
+				"\t\t" + c.equalityOpp + "\t\t" + c.open_paren_left + "\t\t" + c.open_paren_right + "\t\t" + c.close_paren_left + "\t\t" + c.close_paren_right;
+	}
+
+	public static void writeHeader() throws IOException{
 		File file = new File("C:/Users/HOME/Desktop/features.txt");
-		// if file doesnt exists, then create it
 		if (!file.exists()) {
-				file.createNewFile();
+			file.createNewFile();
 		}
-		
+
 		double bytes = file.length();
 		if(bytes > 0){
 			return;
@@ -384,20 +362,20 @@ public class FeatureExtractor {
 
 		FileWriter fw = new FileWriter("C:/Users/HOME/Desktop/features.txt", true);
 		BufferedWriter bw = new BufferedWriter(fw);
-		bw.write(s);
+		bw.write(getFileHeader());
 		bw.newLine();
 		bw.close();
-		
+
 		System.out.println("\nDone writing header\n");
 	}
-	
+
 	public static void writeData(String s) throws IOException{
 		FileWriter fw = new FileWriter("C:/Users/HOME/Desktop/features.txt", true);
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(s);
 		bw.newLine();
 		bw.close();
-		
+
 		System.out.println("\nDone writing data\n");
 	}
 }
