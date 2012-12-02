@@ -133,6 +133,10 @@ public class ConstructParser {
 		int count = 0;
                 int i = 0;
                 
+                s = s.trim();
+                if( !s.endsWith(")") && !s.endsWith("{") && !s.endsWith(";"))
+                    return 0;
+                
                 int array [] = generic_paren_spacing(s,i);
                 if( array == null){
                     System.out.println("PROBLEM in CHECK_IF with generic_paren_spacing");
@@ -169,6 +173,10 @@ public class ConstructParser {
 		
 		int count = 0;
 		int i = 0;
+                
+                s = s.trim();
+                if( !s.endsWith(")") && !s.endsWith("{") && !s.endsWith(";"))
+                    return 0;
                 
                 int array [] = generic_paren_spacing(s,i);
                 if( array == null){
@@ -212,6 +220,10 @@ public class ConstructParser {
                 
                 if(s == null)
 			return count;
+                
+                s = s.trim();
+                if( !s.endsWith(")") && !s.endsWith("{"))
+                    return 0;
 
                 
                 /* 
@@ -314,7 +326,7 @@ public class ConstructParser {
         
         public int [] checkAssignmentOrEquality(String s){
             
-            int array [] = containsAssignmentOrEquality(s);
+            int array [] = containsAssignmentOrEquality(s); 
             if( array[0] == -1)
                 return array;
             
@@ -377,6 +389,9 @@ public class ConstructParser {
                     close_parenOpp++;
                 }
                 i++;
+                
+                if( i >= s.length())
+                    return s.length() - 1;
             }
             
             return i;

@@ -379,7 +379,7 @@ public class FeatureExtractor {
 	}
 
 	public static String getFileHeader(){
-		return "Class\tComments\tBComments\tNumOfLines\tWhileCount\tForCount\tIfCondCount\tBracketCount\tAllSpaces\tCSS" +
+		return "Class\t\tComments\tBComments\tNumOfLines\tWhileCount\tForCount\tIfCondCount\tBracketCount\tAllSpaces\tCSS" +
 				"\tAssignment\tAssignOpp\tEquality\tEqualityOpp\tOpenParenL\tOpenParenR\tOpenParenOpp\tCloseParenL\tCloseParenR\tCloseParenOpp";
 	}
 
