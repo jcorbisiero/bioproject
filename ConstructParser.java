@@ -264,7 +264,8 @@ public class ConstructParser {
                 assert(s.charAt(i) == ')');
                 if( s.charAt(i - 1) == ' ' )
                     for_incrementParen++;
-                if( s.length() <= i+1 && s.charAt(i + 1) == ' ')
+                System.out.println("length:" + s.length() + "curr i: " + i);
+                if( s.length() < i+1 && s.charAt(i + 1) == ' ')
                     for_parenBracket++;
                 
                 
@@ -328,7 +329,7 @@ public class ConstructParser {
             
             System.out.println("Find Close Paren:  " + s + " " + i );
             
-            while(s.charAt(i) != ')' || open_paren_counter > 0) {
+            while(s.length() < i && s.charAt(i) != ')' || open_paren_counter > 0) {
 
                 if( s.charAt(i) == '\"')
                     i = find_close_string(s,i+1);
@@ -344,7 +345,7 @@ public class ConstructParser {
                     if( s.charAt(i + 1) == ' ')
                         open_paren_right++;
                 }
-                
+                System.out.println("open paren counter after possible inc: " + open_paren_counter);
                 if( s.charAt(i) == ')') {
                     open_paren_counter--;
                     if( s.charAt(i - 1) == ' ' )
@@ -353,6 +354,7 @@ public class ConstructParser {
                         close_paren_right++;
                     
                 }
+                System.out.println("open paren counter after possible dec: " + open_paren_counter);
                 i++;
             }
             
