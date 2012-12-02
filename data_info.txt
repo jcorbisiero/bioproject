@@ -1,0 +1,24 @@
+bird = person1
+cat = person2
+duck = person3
+calf = person4
+dog = person5
+
+don't use this --> not good
+bull = person 6 -> maybe don't use this person because only 3 pieces of data, get more people
+
+fish = person7
+frog = person8 -> program3 and 4 not used -> maybe i should?
+goat = person9
+hare = person10 -> this one may be very shitty
+hawk = person11
+
+ibex = person12 -> may not use this guy, shitty too
+-oblig2 ->oppg1 and oppg2 counted as 2 separate programs, oppg4 not used
+-oblig3 ->opg2 1 program and other files another program
+
+kiwi = person13
+
+lark = person14 --> not done yet
+lion = person15 --> not done yet
+mink = person16
