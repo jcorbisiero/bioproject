@@ -78,7 +78,7 @@ public class FeatureExtractor {
 		writeHeader();
 		String pseudonym = args[0];
 		for(int i = 1; i<args.length; i++){
-			System.out.println("Looking at file: " + i);
+			System.out.println("\n\nLooking at file: " + args[i] + "\n\n");
 
 			FileInputStream fstream = new FileInputStream(args[i]);
 			DataInputStream in = new DataInputStream(fstream);
@@ -350,7 +350,7 @@ public class FeatureExtractor {
 	}
 
 	public static void writeHeader() throws IOException{
-		File file = new File("C:/Users/HOME/Desktop/features.txt");
+		File file = new File("features.txt");
 		if (!file.exists()) {
 			file.createNewFile();
 		}
@@ -360,7 +360,7 @@ public class FeatureExtractor {
 			return;
 		}
 
-		FileWriter fw = new FileWriter("C:/Users/HOME/Desktop/features.txt", true);
+		FileWriter fw = new FileWriter("features.txt", true);
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(getFileHeader());
 		bw.newLine();
@@ -370,7 +370,7 @@ public class FeatureExtractor {
 	}
 
 	public static void writeData(String s) throws IOException{
-		FileWriter fw = new FileWriter("C:/Users/HOME/Desktop/features.txt", true);
+		FileWriter fw = new FileWriter("features.txt", true);
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(s);
 		bw.newLine();
