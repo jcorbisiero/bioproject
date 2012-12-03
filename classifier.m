@@ -19,27 +19,40 @@ fTrainIn = fopen(train_in, 'r');
 Features in the following order:
 Class	Comments	BComments	NumOfLines	WhileCount	ForCount	IfCondCount
 BracketCount	AllSpaces	CSS	 Assignment	  AssignOpp	  Equality	EqualityOpp
-OpenParenL	OpenParenR	CloseParenL	CloseParenR
+OpenParenL	OpenParenR OpenParenOpp	CloseParenL	CloseParenR CloseParenOpp
 %}
-C = textscan(fTrainIn, '%s %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d');
+
+global NUM_LINES_INDEX;
+global ASSIGNMENTS_INDEX;
+global EQUALITY_INDEX;
+global EQUALITYOPP_INDEX;
+global OPEN_PARENL_INDEX;
+global OPEN_PARENR_INDEX;
+global OPEN_PARENOPP_INDEX;
+global CLOSE_PARENL_INDEX;
+global CLOSE_PARENR_INDEX;
+global CLOSE_PARENOPP_INDEX;
+
+NUM_LINES_INDEX     = 3;
+ASSIGNMENTS_INDEX   = 10;
+EQUALITY_INDEX      = 12;
+EQUALITYOPP_INDEX   = 13;
+OPEN_PARENL_INDEX   = 14;
+OPEN_PARENR_INDEX   = 15;
+OPEN_PARENOPP_INDEX = 16;
+CLOSE_PARENL_INDEX  = 17;
+CLOSE_PARENR_INDEX  = 18;
+CLOSE_PARENOPP_INDEX = 19;
+
+C = textscan(fTrainIn, '%s %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f');
 fclose(fTrainIn);
-fprintf('Size of C: %d x %d\n', size(C));
-% disp(C{2});
+
 trainLabels = C{1};
-
-fprintf('Size of trainLabels: %d x %d\n', size(trainLabels));
-fprintf('First training label: %s\n', trainLabels{1});
-
 trainFeats = cell2mat(C(2:end));
 
 trainSampleCount = size(trainFeats, 1);
 featCount = size(trainFeats, 2);
-fprintf('Size of trainFeats: %d x %d\n', trainSampleCount, featCount);
 
-fprintf('The first sample is %s.  Its third feature value is %d.\n', ...
-    trainLabels{1}, trainFeats(1,3));
-
-trainSampleCount = size(trainLabels, 1);
 trainOutLabels = cell(trainSampleCount, 1);
 
 %{
@@ -72,22 +85,17 @@ Number of lines: 233
 Normalize by: 233/100 = 2
 After normalization, number of comments: = 34
 %}
-for i = 1:trainSampleCount
-    fprintf('Number of lines: %d\n', trainFeats(i,3));
-    normByLines = trainFeats(i,3)/100;
-    fprintf('norm by: %d\n', normByLines);
-    for j = 1:featCount
-        if(j == 3)
-            fprintf('%d\t', trainFeats(i,j));
-            continue;
-        end
-        trainFeats(i,j) = trainFeats(i,j)/normByLines;
-        fprintf('%d\t', trainFeats(i,j));
-    end
-    fprintf('\n');
     
-    %normalizeData(trainFeats);
-end
+    normFeatures = normalizeByLines(trainFeats,1,ASSIGNMENTS_INDEX - 1);
+    normFeatures = normalizeByOpp(normFeatures,[EQUALITY_INDEX],EQUALITYOPP_INDEX);
+    normFeatures = normalizeByOpp(normFeatures,...
+                    [OPEN_PARENL_INDEX OPEN_PARENR_INDEX],OPEN_PARENOPP_INDEX);
+    normFeatures = normalizeByOpp(normFeatures,...
+                    [CLOSE_PARENL_INDEX CLOSE_PARENR_INDEX],CLOSE_PARENOPP_INDEX);
+    
+    normFeatures
+    
+    normed = normalizeData(normFeatures);
 
 %{
 Begin k nearest neighbors
@@ -110,6 +118,43 @@ for i = 1:testSampleCount
     end
 end
 %}
+end
+
+function normLines = normalizeByLines(features,fromIndex,upUntilIndex)
+
+    global NUM_LINES_INDEX;
+
+    normLines = features;
+    
+    for i = 1:size(features,1)
+        normFactor = features(i,3)/100.0;
+        if(normFactor == 0)
+            continue;
+        end
+        for j = fromIndex:upUntilIndex
+            if(j == NUM_LINES_INDEX )
+                continue;
+            end
+            normLines(i,j) = features(i,j)/normFactor;
+        end
+    end
+end
+
+function normOpp = normalizeByOpp(features,indices,oppIndex)
+
+    normOpp = features;
+    
+    for i = 1:size(features,1)
+        for j = 1:size(indices,2)
+            index = indices(j);
+            oppValue = features(i,oppIndex);
+            if( oppValue == 0 )
+                continue;
+            end
+            fprintf('Index: %d, OppIndex: %d, OppValue: %f\n',index,oppIndex,oppValue);
+            normOpp(i,index) = features(i,index)/oppValue;
+        end
+    end
 end
 
 % normalize the data received
@@ -135,12 +180,12 @@ for i = 1:col
     %fprintf('result: %d\n', (m-mat(1,i))/s);
     
     for j = 1:row
-        x = (m-mat(j,i))/s;
+        x = (mat(j,i)-m)/s;
+        fprintf('Index(%d,%d) from %f to %f  avg=%f, std=%f\n', j,i,mat(j,i),x,m,s);
         normMat(j,i) = x;
         if(isinf(x) || isnan(x))
             fprintf('BIG PROBLEM');
         end
-        fprintf('%d\n', x);
     end
 end
 
