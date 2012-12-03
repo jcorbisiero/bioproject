@@ -19,6 +19,7 @@ ibex = person12 -> may not use this guy, shitty too
 
 kiwi = person13
 
-lark = person14 --> not done yet
-lion = person15 --> not done yet
+lark = person14 
+lion = person15 -> need to rename folders 
 mink = person16
+person17 -> need to rename folders
