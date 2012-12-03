@@ -84,17 +84,40 @@ fprintf('norm by: %d\n', normByLines);
     end
     fprintf('\n');
 end
+
+normalizeData(trainFeats);
 end
 
 % normalize the data received
 function normMat = normalizeData(mat)
 %{
-TODO:
 Normalize data -> mat will be some column vector
 1. take the mean of the column vector
 2. take each entry in the column vector and do
 (mean(column vector)-entry)/stddev(column vector)
 3. return a normalized column vector normMat
 %}
+row = size(mat,1); 
+fprintf('rows: %d\n', row);
+col = size(mat,2); 
+fprintf('col: %d\n', col);
+
+for i = 1:col
+    m = mean(mat(:,i));
+    s = std(double(mat(:,i))) + eps;
+    fprintf('mean: %d\n', m);
+    fprintf('std: %d\n', s);
+    %fprintf('entry: %d\n', mat(1,i));
+    %fprintf('result: %d\n', (m-mat(1,i))/s);
+    
+    for j = 1:row
+        x = (m-mat(j,i))/s;
+        normMat(j,i) = x;
+        if(isinf(x) || isnan(x))
+           fprintf('BIG PROBLEM');
+        end
+        fprintf('%d\n', x);
+    end
+end
 
 end
