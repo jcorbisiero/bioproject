@@ -47,7 +47,7 @@ CLOSE_PARENOPP_INDEX = 19;
 C = textscan(fTrainIn, '%s %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f');
 fclose(fTrainIn);
 
-trainLabels = C{1};
+allLabels = C{1};
 trainFeats = cell2mat(C(2:end));
 
 trainSampleCount = size(trainFeats, 1);
@@ -55,23 +55,7 @@ featCount = size(trainFeats, 2);
 
 trainOutLabels = cell(trainSampleCount, 1);
 
-%{
-fTestIn = fopen(testpath, 'r');
-TEST_IN = textscan(fTestIn, '%s %f %f %f %f %f %f %f %f %f %f %f %f %f %f');
-fclose(fTestIn);
-%fprintf('Size of TEST_IN: %d x %d\n', size(TEST_IN));
-testLabels = TEST_IN{1};
-%fprintf('size of testLabels: %d x %d\n', size(testLabels));
-%fprintf('First testing label: %s\n', testLabels{1});
-testFeats = cell2mat(TEST_IN(2:end));
-testSampleCount = size(testFeats, 1);
-testFeatCount = size(testFeats, 2);
-%fprintf('Size of testFeats: %d x %d\n', testSampleCount, testFeatCount);
-%fprintf('The first sample is %s.  Its third feature value is %f.\n', ...
-%    testLabels{1}, testFeats(1,3));
-%testSampleCount = size(testLabels, 1);
-testOutLabels = cell(testSampleCount, 1);
-%}
+featuresUsing = [1 2 4 5 6 7 10 12 14 15];
 
 %{
 FLOAT MAY BE A CLOSER APPROXIMATION?
@@ -86,38 +70,97 @@ Normalize by: 233/100 = 2
 After normalization, number of comments: = 34
 %}
     
-    normFeatures = normalizeByLines(trainFeats,1,ASSIGNMENTS_INDEX - 1);
+
+
+%Begin k nearest neighbors
+FOLDS = 5;
+total_correct = 0;
+for i = 1:FOLDS
+    
+    % Get test data
+    testRows = [];
+    cursor = i;
+    for j = 1:trainSampleCount/FOLDS
+        testRows(j,:) = trainFeats(cursor,:);
+        testLabels{j} = allLabels{cursor};
+        cursor = cursor + FOLDS;
+    end  
+    % Normalize test data
+    testNormalized = doAllNormalization(testRows);
+   
+    
+    % Get train data
+    trainRows = [];
+    cursorToSkip = i;
+    counter = 1;
+    for j = 1:trainSampleCount
+        
+        if( j == cursorToSkip )
+            cursorToSkip = cursorToSkip + FOLDS;
+            continue;
+        end
+        
+        trainRows(counter,:) = trainFeats(j,:);
+        trainLabels{counter} = allLabels{j};
+        counter = counter + 1;
+    end
+    % Normalize train data
+    trainNormalized = doAllNormalization(trainRows);
+        
+    
+    % Get distance
+    counter = 0;
+    for j = 1:size(testNormalized,1)
+        
+        min_index = -1;
+        min_dist = 100000;
+        
+        for k = 1: size(trainNormalized,1)
+            distance = dist( testNormalized(j,:), trainNormalized(k,:), featuresUsing);
+            % Compare newest distance to the current max dist
+            if(distance < min_dist)
+                min_dist = distance;
+                min_index = k;
+            end
+        end
+        
+        %fprintf('Checking %s(%d). Classified as %s(%d). Min Dist: %d\n',...
+         %       testLabels{j},j,trainLabels{min_index},min_index,min_dist);
+        if( strcmp(testLabels{j},trainLabels{min_index}) == 1 )
+            counter = counter + 1;
+        end
+    end
+    
+    fprintf('Correct: %d/%d - %f\n',counter,size(testRows,1), counter/size(testRows,1));
+    total_correct = total_correct + counter;
+    
+end
+
+fprintf('Avg: %f\n', total_correct/(size(testRows,1)*FOLDS));
+
+end
+
+function normFeatures = doAllNormalization(features)
+
+    global ASSIGNMENTS_INDEX;
+    global EQUALITY_INDEX;
+    global EQUALITYOPP_INDEX;
+    global OPEN_PARENL_INDEX;
+    global OPEN_PARENR_INDEX;
+    global OPEN_PARENOPP_INDEX;
+    global CLOSE_PARENL_INDEX;
+    global CLOSE_PARENR_INDEX;
+    global CLOSE_PARENOPP_INDEX;
+
+    normFeatures = normalizeByLines(features,1,ASSIGNMENTS_INDEX - 1);
     normFeatures = normalizeByOpp(normFeatures,[EQUALITY_INDEX],EQUALITYOPP_INDEX);
     normFeatures = normalizeByOpp(normFeatures,...
                     [OPEN_PARENL_INDEX OPEN_PARENR_INDEX],OPEN_PARENOPP_INDEX);
     normFeatures = normalizeByOpp(normFeatures,...
                     [CLOSE_PARENL_INDEX CLOSE_PARENR_INDEX],CLOSE_PARENOPP_INDEX);
-    
-    normFeatures
-    
-    normed = normalizeData(normFeatures);
+                
+    normFeatures = normalizeData(normFeatures);
 
-%{
-Begin k nearest neighbors
-for i = 1:testSampleCount
-    n1 = intmax;
-    for j = 1:trainSampleCount
-        % Get the distance
-        % Fill in what features we plan to look at
-        % TODO:
-        % FILL IN FEATURES NEEDED TO FIND EUCLIDEAN DISTANCE
-        % ALSO GRAPH STUFF
-        % distance = sqrt();
-        
-        
-        % Compare newest distance to the current max dist
-        if(distance < n1)
-            n1 = distance;
-            testLabels{i} = trainLabels{j};
-        end
-    end
-end
-%}
 end
 
 function normLines = normalizeByLines(features,fromIndex,upUntilIndex)
@@ -151,7 +194,7 @@ function normOpp = normalizeByOpp(features,indices,oppIndex)
             if( oppValue == 0 )
                 continue;
             end
-            fprintf('Index: %d, OppIndex: %d, OppValue: %f\n',index,oppIndex,oppValue);
+            %fprintf('Index: %d, OppIndex: %d, OppValue: %f\n',index,oppIndex,oppValue);
             normOpp(i,index) = features(i,index)/oppValue;
         end
     end
@@ -167,21 +210,21 @@ Normalize data -> mat will be some column vector
 3. return a normalized matrix normMat
 %}
 row = size(mat,1);
-fprintf('rows: %d\n', row);
+%fprintf('rows: %d\n', row);
 col = size(mat,2);
-fprintf('col: %d\n', col);
+%fprintf('col: %d\n', col);
 
 for i = 1:col
     m = mean(mat(:,i));
     s = std(double(mat(:,i))) + eps;
-    fprintf('mean: %d\n', m);
-    fprintf('std: %d\n', s);
+    %fprintf('mean: %d\n', m);
+    %fprintf('std: %d\n', s);
     %fprintf('entry: %d\n', mat(1,i));
     %fprintf('result: %d\n', (m-mat(1,i))/s);
     
     for j = 1:row
         x = (mat(j,i)-m)/s;
-        fprintf('Index(%d,%d) from %f to %f  avg=%f, std=%f\n', j,i,mat(j,i),x,m,s);
+        %fprintf('Index(%d,%d) from %f to %f  avg=%f, std=%f\n', j,i,mat(j,i),x,m,s);
         normMat(j,i) = x;
         if(isinf(x) || isnan(x))
             fprintf('BIG PROBLEM');
@@ -195,7 +238,10 @@ sum = 0;
 MAX = size(featIndex,2);
 
 for i = 1:MAX
-    sum = sum + (testFeat(1,featIndex(1,i)) - trainFeat(1,(featIndex(1,i))))^2;
+    sum = sum + (testFeat(featIndex(i)) - trainFeat((featIndex(i))))^2;
+    %fprintf('FeatIndex %d was %d which has value in testFeat %d\n',...
+     %           i,featIndex(i), testFeat(featIndex(i)));
+                    
 end
 
 distance = sqrt(sum);
