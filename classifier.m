@@ -13,7 +13,77 @@ TODO:
 6. Depending on which is better we may have to check for 3-way tie or take
 majority of classes it is closest to
 %}
+fTrainIn = fopen(train_in, 'r');
 
+%{
+Features in the following order:
+Class	Comments	BComments	NumOfLines	WhileCount	ForCount	IfCondCount	
+BracketCount	AllSpaces	CSS	 Assignment	  AssignOpp	  Equality	EqualityOpp	
+OpenParenL	OpenParenR	CloseParenL	CloseParenR
+%}
+C = textscan(fTrainIn, '%s %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d');
+fclose(fTrainIn);
+fprintf('Size of C: %d x %d\n', size(C));
+disp(C{2});
+trainLabels = C{1};
+
+fprintf('Size of trainLabels: %d x %d\n', size(trainLabels));
+fprintf('First training label: %s\n', trainLabels{1});
+
+trainFeats = cell2mat(C(2:end));
+
+trainSampleCount = size(trainFeats, 1);
+featCount = size(trainFeats, 2);
+fprintf('Size of trainFeats: %d x %d\n', trainSampleCount, featCount);
+
+fprintf('The first sample is %s.  Its third feature value is %d.\n', ...
+    trainLabels{1}, trainFeats(1,3));
+
+trainSampleCount = size(trainLabels, 1);
+trainOutLabels = cell(trainSampleCount, 1);
+
+%{
+fTestIn = fopen(testpath, 'r');
+TEST_IN = textscan(fTestIn, '%s %f %f %f %f %f %f %f %f %f %f %f %f %f %f');
+fclose(fTestIn);
+%fprintf('Size of TEST_IN: %d x %d\n', size(TEST_IN));
+testLabels = TEST_IN{1};
+%fprintf('size of testLabels: %d x %d\n', size(testLabels));
+%fprintf('First testing label: %s\n', testLabels{1});
+testFeats = cell2mat(TEST_IN(2:end));
+%testSampleCount = size(testFeats, 1);
+%testFeatCount = size(testFeats, 2);
+%fprintf('Size of testFeats: %d x %d\n', testSampleCount, testFeatCount);
+%fprintf('The first sample is %s.  Its third feature value is %f.\n', ...
+%    testLabels{1}, testFeats(1,3));
+testSampleCount = size(testLabels, 1);
+testOutLabels = cell(testSampleCount, 1);
+%}
+
+%{
+The following normalizes each feature of each class based on the number of
+lines/100 in a class's programs code.
+
+For example:
+Number of comments: 67
+Number of lines: 233
+Normalize by: 233/100 = 2
+After normalization, number of comments: = 34
+%}
+for i = 1:trainSampleCount
+fprintf('Number of lines: %d\n', trainFeats(i,3));
+normByLines = trainFeats(i,3)/100;
+fprintf('norm by: %d\n', normByLines);
+    for j = 1:featCount
+        if(j == 3)
+            fprintf('%d\t', trainFeats(i,j));
+            continue;
+        end
+        trainFeats(i,j) = trainFeats(i,j)/normByLines;
+        fprintf('%d\t', trainFeats(i,j));
+    end
+    fprintf('\n');
+end
 end
 
 % normalize the data received
@@ -28,5 +98,3 @@ Normalize data -> mat will be some column vector
 %}
 
 end
-
-
