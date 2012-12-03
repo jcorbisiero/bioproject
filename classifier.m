@@ -188,5 +188,15 @@ for i = 1:col
         end
     end
 end
+end
 
+function distance = dist(testFeat, trainFeat, featIndex)
+sum = 0;
+MAX = size(featIndex,2);
+
+for i = 1:MAX
+    sum = sum + (testFeat(1,featIndex(1,i)) - trainFeat(1,(featIndex(1,i))))^2;
+end
+
+distance = sqrt(sum);
 end
