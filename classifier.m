@@ -1,6 +1,6 @@
 % Beginning of k-neareast-neighbor classifier
 % Inputs: train data, test data
-% Outputs: train out data(maybe not needed for this since we are concerned 
+% Outputs: train out data(maybe not needed for this since we are concerned
 % with test data), test out data
 function classifier(train_in, test_in, train_out, test_out)
 %{
@@ -17,14 +17,14 @@ fTrainIn = fopen(train_in, 'r');
 
 %{
 Features in the following order:
-Class	Comments	BComments	NumOfLines	WhileCount	ForCount	IfCondCount	
-BracketCount	AllSpaces	CSS	 Assignment	  AssignOpp	  Equality	EqualityOpp	
+Class	Comments	BComments	NumOfLines	WhileCount	ForCount	IfCondCount
+BracketCount	AllSpaces	CSS	 Assignment	  AssignOpp	  Equality	EqualityOpp
 OpenParenL	OpenParenR	CloseParenL	CloseParenR
 %}
 C = textscan(fTrainIn, '%s %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d');
 fclose(fTrainIn);
 fprintf('Size of C: %d x %d\n', size(C));
-disp(C{2});
+% disp(C{2});
 trainLabels = C{1};
 
 fprintf('Size of trainLabels: %d x %d\n', size(trainLabels));
@@ -51,16 +51,18 @@ testLabels = TEST_IN{1};
 %fprintf('size of testLabels: %d x %d\n', size(testLabels));
 %fprintf('First testing label: %s\n', testLabels{1});
 testFeats = cell2mat(TEST_IN(2:end));
-%testSampleCount = size(testFeats, 1);
-%testFeatCount = size(testFeats, 2);
+testSampleCount = size(testFeats, 1);
+testFeatCount = size(testFeats, 2);
 %fprintf('Size of testFeats: %d x %d\n', testSampleCount, testFeatCount);
 %fprintf('The first sample is %s.  Its third feature value is %f.\n', ...
 %    testLabels{1}, testFeats(1,3));
-testSampleCount = size(testLabels, 1);
+%testSampleCount = size(testLabels, 1);
 testOutLabels = cell(testSampleCount, 1);
 %}
 
 %{
+FLOAT MAY BE A CLOSER APPROXIMATION?
+
 The following normalizes each feature of each class based on the number of
 lines/100 in a class's programs code.
 
@@ -71,9 +73,9 @@ Normalize by: 233/100 = 2
 After normalization, number of comments: = 34
 %}
 for i = 1:trainSampleCount
-fprintf('Number of lines: %d\n', trainFeats(i,3));
-normByLines = trainFeats(i,3)/100;
-fprintf('norm by: %d\n', normByLines);
+    fprintf('Number of lines: %d\n', trainFeats(i,3));
+    normByLines = trainFeats(i,3)/100;
+    fprintf('norm by: %d\n', normByLines);
     for j = 1:featCount
         if(j == 3)
             fprintf('%d\t', trainFeats(i,j));
@@ -83,9 +85,31 @@ fprintf('norm by: %d\n', normByLines);
         fprintf('%d\t', trainFeats(i,j));
     end
     fprintf('\n');
+    
+    %normalizeData(trainFeats);
 end
 
-normalizeData(trainFeats);
+%{
+Begin k nearest neighbors
+for i = 1:testSampleCount
+    n1 = intmax;
+    for j = 1:trainSampleCount
+        % Get the distance
+        % Fill in what features we plan to look at
+        % TODO:
+        % FILL IN FEATURES NEEDED TO FIND EUCLIDEAN DISTANCE
+        % ALSO GRAPH STUFF
+        % distance = sqrt();
+        
+        
+        % Compare newest distance to the current max dist
+        if(distance < n1)
+            n1 = distance;
+            testLabels{i} = trainLabels{j};
+        end
+    end
+end
+%}
 end
 
 % normalize the data received
@@ -95,11 +119,11 @@ Normalize data -> mat will be some column vector
 1. take the mean of the column vector
 2. take each entry in the column vector and do
 (mean(column vector)-entry)/stddev(column vector)
-3. return a normalized column vector normMat
+3. return a normalized matrix normMat
 %}
-row = size(mat,1); 
+row = size(mat,1);
 fprintf('rows: %d\n', row);
-col = size(mat,2); 
+col = size(mat,2);
 fprintf('col: %d\n', col);
 
 for i = 1:col
@@ -114,7 +138,7 @@ for i = 1:col
         x = (m-mat(j,i))/s;
         normMat(j,i) = x;
         if(isinf(x) || isnan(x))
-           fprintf('BIG PROBLEM');
+            fprintf('BIG PROBLEM');
         end
         fprintf('%d\n', x);
     end
