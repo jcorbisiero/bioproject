@@ -76,139 +76,155 @@ public class FeatureExtractor {
 		 */
 
 		writeHeader();
-		String pseudonym = args[0];
+		//String pseudonym = args[0];
                 String directory = args[1];
-                File person = new File(directory);
-                if( person == null){
-                    System.out.println("BAD Person: " + directory);
+                File data = new File(directory);
+                if( data == null){
+                    System.out.println("BAD data: " + directory);
                     System.exit(1);
                 }
-                File [] folders = person.listFiles();
-                if( folders == null){
-                    System.out.println("BAD folder: " + directory);
+                File [] people = data.listFiles();
+                if( people == null){
+                    System.out.println("BAD people: " + directory);
                     System.exit(1);
                 }
-                for(int folderCount = 0; folderCount < folders.length; folderCount++){
-                    File [] dir = folders[folderCount].listFiles();
-                    if( dir == null){
-                        System.out.println("BAD dir: " + directory);
+                for(int peopleCount = 0; peopleCount < people.length; peopleCount++){
+                    File person = people[peopleCount];
+                    if( person == null){
+                        System.out.println("BAD Person: " + directory);
                         System.exit(1);
                     }
                     
-                    c = new ConstructParser();
+                    String pseudonym = person.getName();
                     
-                    numOfLines = 0;
-                    whileLoopCount = 0;
-                    forLoopCount = 0;
-                    comments = 0;
-                    blockComments = 0;
-                    ifCount = 0;
-                    classes = 0;
-                    bracketCount = 0;
-                    allSpaces = 0;
-                    codingStyle = 0;
-                    functions = 0;
-                    fields = 0;
-                    
-                    
-                    for(int i = 0; i< dir.length; i++){
-                            System.out.println("Looking at file: " + i + " " + dir[i].getName());
-
-                            if( dir[i].isDirectory() ){
-                                System.out.println("Skipping " + i);
-                                continue;
-                            }
-
-                            FileInputStream fstream = new FileInputStream(dir[i].getAbsolutePath());
-                            DataInputStream in = new DataInputStream(fstream);
-                            BufferedReader br = new BufferedReader(new InputStreamReader(in));
-                            String strLine;
-                            while ((strLine = br.readLine()) != null) {
-
-                                    //System.out.println("Line currently being looked at: " + strLine);
-
-                                    numOfLines++;
-                                    //allSpaces += countAllSpaces(strLine);
-
-                                    /*
-                                     * Count number of comments/blockComments
-                                     */
-                                    if(strLine.contains(singleComm)) {
-                                            //System.out.println(strLine);
-                                            comments++;
-
-                                            //line is a comment only
-                                            if(strLine.trim().startsWith("//")){
-                                                    //System.out.println("Comment only line: " + strLine);
-                                                    continue;
-                                            }
-                                    } else if(strLine.contains(startBlockComm) && strLine.contains(endBlockComm)){
-                                            blockComments++;
-                                            //System.out.println(strLine);
-
-                                            /*
-                                             * We know the line starts with /* but if it contains * / also
-                                             * then is must be a single line comment and we can skip it
-                                             */
-                                            if(strLine.trim().startsWith("/*") && strLine.trim().endsWith("*/")){
-                                                    System.out.println("!!!!!!!!!!!!!!!!!!!!!Skipped line: " + strLine);
-                                                    continue;
-                                            }
-                                    }
-
-                                    /*
-                                     * Check for line that contains "{" as the only
-                                     * piece of code
-                                     */
-                                    if(singleOpenBracket(strLine, bracket)){
-                                            bracketCount++;
-                                            continue;
-                                    }
-
-
-                                    /*
-                                     * Get the coding style spaces
-                                     * If needed, we can have individual features:
-                                     * one for the if condition
-                                     * one for the for loop
-                                     * one for the while loop
-                                     * As of now they are summed up together as a single sum
-                                     */
-                                    strLine = removeComment(strLine);
-                                    codingStyle += test(strLine);
-
-                                    /* 
-                                     * Put this after eveything else because checking the situation 
-                                     * where a block comment exists after some code is a little tricky
-                                     * and I did it after everything else
-                                     * Counts number of comments
-                                     * If it sees a block comment, it will skip lines until the
-                                     * end of the block comment is found
-                                     */
-                                    if(strLine.contains(startBlockComm)  && !strLine.contains(endBlockComm)){
-                                            blockComments++;
-                                            //System.out.println(strLine);
-                                            /*
-                                             * Skip the lines in the block comment until we see a * / 
-                                             */
-                                            for(;;){
-                                                    strLine = br.readLine();
-                                                    //System.out.println(strLine);
-                                                    if(strLine.contains("*/")){
-                                                            break;
-                                                    }
-                                            }
-                                    }
-
-                            }
-                            in.close();
-                            //checkFunction(args[0], args[i]);
-                            String s = "comments: " + comments + "\nblockComments: " + blockComments + "\nnumOfLines: " + numOfLines + "\nwhileLoop: "
-                                            + whileLoopCount + "\nforLoop: " + forLoopCount + "\nifCount: " + ifCount + "\nclasses: "
-                                            + classes + "\nbracketCount:" + bracketCount + "\nall spaces: " + allSpaces + "\ncoding style spaces: " + codingStyle; 		
-                            System.out.println(s);		
+                    File [] folders = person.listFiles();
+                    if( folders == null){
+                        System.out.println("BAD folder: " + directory);
+                        System.exit(1);
                     }
-                    writeData(getClassData(pseudonym));
+                    for(int folderCount = 0; folderCount < folders.length; folderCount++){
+                        File [] dir = folders[folderCount].listFiles();
+                        if( dir == null){
+                            System.out.println("BAD dir: " + directory);
+                            System.exit(1);
+                        }
+
+                        c = new ConstructParser();
+
+                        numOfLines = 0;
+                        whileLoopCount = 0;
+                        forLoopCount = 0;
+                        comments = 0;
+                        blockComments = 0;
+                        ifCount = 0;
+                        classes = 0;
+                        bracketCount = 0;
+                        allSpaces = 0;
+                        codingStyle = 0;
+                        functions = 0;
+                        fields = 0;
+
+
+                        for(int i = 0; i< dir.length; i++){
+                                System.out.println("\n\nLooking at file: " + i + " " + dir[i].getName());
+
+                                if( dir[i].isDirectory() ){
+                                    System.out.println("Skipping " + i);
+                                    continue;
+                                }
+
+                                FileInputStream fstream = new FileInputStream(dir[i].getAbsolutePath());
+                                DataInputStream in = new DataInputStream(fstream);
+                                BufferedReader br = new BufferedReader(new InputStreamReader(in));
+                                String strLine;
+                                while ((strLine = br.readLine()) != null) {
+
+                                        //System.out.println("Line currently being looked at: " + strLine);
+
+                                        numOfLines++;
+                                        //allSpaces += countAllSpaces(strLine);
+
+                                        /*
+                                         * Count number of comments/blockComments
+                                         */
+                                        if(strLine.contains(singleComm)) {
+                                                //System.out.println(strLine);
+                                                comments++;
+
+                                                //line is a comment only
+                                                if(strLine.trim().startsWith("//")){
+                                                        //System.out.println("Comment only line: " + strLine);
+                                                        continue;
+                                                }
+                                        } else if(strLine.contains(startBlockComm) && strLine.contains(endBlockComm)){
+                                                blockComments++;
+                                                //System.out.println(strLine);
+
+                                                /*
+                                                 * We know the line starts with /* but if it contains * / also
+                                                 * then is must be a single line comment and we can skip it
+                                                 */
+                                                if(strLine.trim().startsWith("/*") && strLine.trim().endsWith("*/")){
+                                                        System.out.println("!!!!!!!!!!!!!!!!!!!!!Skipped line: " + strLine);
+                                                        continue;
+                                                }
+                                        }
+
+                                        /*
+                                         * Check for line that contains "{" as the only
+                                         * piece of code
+                                         */
+                                        if(singleOpenBracket(strLine, bracket)){
+                                                bracketCount++;
+                                                continue;
+                                        }
+
+
+                                        /*
+                                         * Get the coding style spaces
+                                         * If needed, we can have individual features:
+                                         * one for the if condition
+                                         * one for the for loop
+                                         * one for the while loop
+                                         * As of now they are summed up together as a single sum
+                                         */
+                                        strLine = removeComment(strLine);
+                                        codingStyle += test(strLine);
+
+                                        /* 
+                                         * Put this after eveything else because checking the situation 
+                                         * where a block comment exists after some code is a little tricky
+                                         * and I did it after everything else
+                                         * Counts number of comments
+                                         * If it sees a block comment, it will skip lines until the
+                                         * end of the block comment is found
+                                         */
+                                        if(strLine.contains(startBlockComm)  && !strLine.contains(endBlockComm)){
+                                                blockComments++;
+                                                //System.out.println(strLine);
+                                                /*
+                                                 * Skip the lines in the block comment until we see a * / 
+                                                 */
+                                                for(;;){
+                                                        strLine = br.readLine();
+                                                        //System.out.println(strLine);
+                                                        if(strLine.contains("*/")){
+                                                                break;
+                                                        }
+                                                }
+                                        }
+
+                                }
+                                in.close();
+                                //checkFunction(args[0], args[i]);
+                                String s = "comments: " + comments + "\nblockComments: " + blockComments + "\nnumOfLines: " + numOfLines + "\nwhileLoop: "
+                                                + whileLoopCount + "\nforLoop: " + forLoopCount + "\nifCount: " + ifCount + "\nclasses: "
+                                                + classes + "\nbracketCount:" + bracketCount + "\nall spaces: " + allSpaces + "\ncoding style spaces: " + codingStyle; 		
+                                System.out.println(s);		
+                        }
+                        writeData(getClassData(pseudonym));
+                        //System.exit(1);
+                    }
                 }
 	}
 
@@ -239,7 +255,7 @@ public class FeatureExtractor {
 				}
 			}
 		}
-		System.out.println("final string: " + s);
+		//System.out.println("final string: " + s);
 		return s;
 	}
 	//Check for the following situations
@@ -253,7 +269,7 @@ public class FeatureExtractor {
 	// 8) //int a = b; //comment
 	public static String removeComment(String s){
 		//System.out.println("Parse Comments");
-		System.out.println("String: " + s);
+		//System.out.println("String: " + s);
 		//block comment on same line as code, but before the code: /* */ code
 		if(s.startsWith("/*")){
 			int index = s.indexOf("*/");
@@ -276,10 +292,10 @@ public class FeatureExtractor {
 	public static boolean singleOpenBracket(String s, String bracket){
 		s = s.trim();
 		if(s.startsWith("{")){
-			System.out.println("started with {");
+			//System.out.println("started with {");
 		}
 		if(s.equals(bracket)){
-			System.out.println("OPEN BRACKET FOUND!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+			//System.out.println("OPEN BRACKET FOUND!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 			return true;
 		}
 
@@ -303,7 +319,7 @@ public class FeatureExtractor {
 	 */ 
 	public static int test(String s){
 		//System.out.println("In Test");
-		System.out.println("String: " + s);
+		//System.out.println("String: " + s);
 		//System.out.println("Coding style spaces: " + codingStyle(s)); 
 		return codingStyle(s);
 	}
@@ -331,7 +347,7 @@ public class FeatureExtractor {
 			forLoopCount++;
 			return c.check_for(s);
 		}else if(s.trim().startsWith("while ") || s.trim().startsWith("while(")){
-			System.out.println("WHILE: String: " + s);
+			//System.out.println("WHILE: String: " + s);
 			whileLoopCount++;
 			return c.check_while(s);
 		}
@@ -380,14 +396,18 @@ public class FeatureExtractor {
 
 	public static String getFileHeader(){
 		return "Class\t\tComments\tBComments\tNumOfLines\tWhileCount\tForCount\tIfCondCount\tBracketCount\tAllSpaces\tCSS" +
-				"\tAssignment\tAssignOpp\tEquality\tEqualityOpp\tOpenParenL\tOpenParenR\tOpenParenOpp\tCloseParenL\tCloseParenR\tCloseParenOpp";
+				"\tAssignment\tAssignOpp\tEquality\tEqualityOpp\tOpenParenL\tOpenParenR\tOpenParenOpp\tCloseParenL\tCloseParenR\tCloseParenOpp" +
+                                "\tIfParen\tIfParenCond\tIfCondParen\tWhileParen\tWhileParenCond\tWhileCondParen\tForParen\tForParenVar\tForSemiCond\tForSemiInc";
 	}
 
 	public static String getClassData(String pseudonym){
 		return pseudonym + "\t" + comments + "\t\t" + blockComments + "\t\t" + numOfLines + "\t\t" + whileLoopCount + "\t\t" + forLoopCount + "\t\t" + ifCount + 
 				"\t\t" + bracketCount + "\t\t" + allSpaces + "\t\t" + codingStyle + "\t\t" + c.assignment + "\t\t" + c.assignmentOpp + 	"\t\t" + c.equality +
 				"\t\t" + c.equalityOpp + "\t\t" + c.open_paren_left + "\t\t" + c.open_paren_right + "\t\t" + c.open_parenOpp + 
-                                "\t\t" +c.close_paren_left + "\t\t" + c.close_paren_right + "\t\t" + c.close_parenOpp;
+                                "\t\t" + c.close_paren_left + "\t\t" + c.close_paren_right + "\t\t" + c.close_parenOpp + "\t\t" + c.if_ifParen + 
+                                "\t\t" + c.if_parenCondition + "\t\t" + c.if_conditionParen + "\t\t" + c.while_whileParen + "\t\t" + c.while_parenCondition +
+                                "\t\t" + c.while_conditionParen + "\t\t" + c.for_forParen + "\t\t" + c.for_parenVariable + "\t\t" + c.for_semiCondition +
+                                "\t\t" + c.for_semiIncrement;
 	}
 
 	public static void writeHeader() throws IOException{
